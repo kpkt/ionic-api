@@ -1,0 +1,5 @@
+page-add-item {
+    .validation-errors {
+        color: map_get($colors, danger);
+      }        
+}

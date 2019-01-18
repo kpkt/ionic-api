@@ -1,37 +1,100 @@
+import { ViewItemPage } from './../view-item/view-item';
 import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { NavController, NavParams, ModalController } from 'ionic-angular';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AddItemPage } from '../add-item/add-item';
 
 @Component({
   selector: 'page-list',
   templateUrl: 'list.html'
 })
 export class ListPage {
-  selectedItem: any;
-  icons: string[];
-  items: Array<{title: string, note: string, icon: string}>;
+  token:string = 'Abc123';
+  url: string = 'http://192.168.1.6/api';
+  users: any = [];
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
-    // If we navigated to this page, we will have an item available as a nav param
-    this.selectedItem = navParams.get('item');
-
-    // Let's populate this page with some filler content for funzies
-    this.icons = ['flask', 'wifi', 'beer', 'football', 'basketball', 'paper-plane',
-    'american-football', 'boat', 'bluetooth', 'build'];
-
-    this.items = [];
-    for (let i = 1; i < 11; i++) {
-      this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
-      });
-    }
+  constructor(public navCtrl: NavController, 
+    public navParams: NavParams,
+    public modalCtrl: ModalController,
+    public http: HttpClient) {
+    this.getData();
   }
 
-  itemTapped(event, item) {
-    // That's right, we're pushing to ourselves!
-    this.navCtrl.push(ListPage, {
-      item: item
+  /**
+   * Function utk 
+   * get data dari server
+   * http.post()
+   */  
+  getData(){
+
+    //Set header options
+    const httpOption = {
+      headers : new HttpHeaders()
+        .set('Authorization', 'Bearer ' + this.token)
+        .set('Content-Type','application/json; application/x-www-form-urlencoded; charset=utf-8' )
+    };
+  
+    //set data body
+    const bodyData = {};
+
+    //Panggil function post
+    this.post('list.php', bodyData, httpOption).subscribe((result:any)=>{
+      if(result.status == 'berjaya'){
+          for(let user of result.data){
+            this.users.push(user);
+          }
+      }
+    });
+
+  }
+
+  addData(){
+
+    //Set header options
+    const httpOption = {
+      headers : new HttpHeaders()
+        .set('Authorization', 'Bearer ' + this.token)
+        .set('Content-Type','application/json; application/x-www-form-urlencoded; charset=utf-8' )
+    };
+  
+    //set data body
+    const bodyData = {};
+
+    //Panggil function post
+    this.post('list.php', bodyData, httpOption).subscribe((result:any)=>{
+      if(result.status == 'berjaya'){
+          for(let user of result.data){
+            this.users.push(user);
+          }
+      }
+    });
+    
+  }
+
+  openModalAddItem(){
+    let modallAddItem = this.modalCtrl.create(AddItemPage);
+    modallAddItem.present();
+    
+    //modal onDidDismiss with carry data from server
+    modallAddItem.onDidDismiss((data:any) => {
+      if(data){
+        this.users.push(data);
+      }      
     });
   }
+
+  openItem(data:any){
+    this.navCtrl.push(ViewItemPage,{dataUser:data});    
+  }
+
+  /**
+   * Function http.post();
+   * @param endpoint 
+   * @param body 
+   * @param reqOpts 
+   */
+  post(endpoint: string, body: any, reqOpts?: any) {
+    return this.http.post(this.url + '/' + endpoint, body, reqOpts);
+  }
+
 }
